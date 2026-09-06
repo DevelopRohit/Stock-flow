@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    // 'alpha_vantage' => [
+    //     'key' => env('ALPHA_VANTAGE_API_KEY'),
+    //     'url' => 'https://www.alphavantage.co/query',
+    // ],
+
 ];

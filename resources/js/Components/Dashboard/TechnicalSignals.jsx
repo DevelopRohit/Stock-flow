@@ -1,79 +1,79 @@
-export default function TechnicalSignals() {
-    const indicators = [
+export default function TechnicalSignals({ stock }) {
+    if (!stock) {
+        return null;
+    }
+
+    const positive = stock.change >= 0;
+
+    const signals = [
         {
-            name: "RSI",
-            value: "62.4",
-            signal: "BUY",
+            name: "Price Trend",
+            value: positive ? "Bullish" : "Bearish",
+            positive,
         },
         {
-            name: "MACD",
-            value: "+18.42",
-            signal: "BUY",
+            name: "Daily Change",
+            value: `${stock.changePercent.toFixed(2)}%`,
+            positive,
         },
         {
-            name: "EMA 20",
-            value: "2,420.10",
-            signal: "BUY",
+            name: "Market Momentum",
+            value: positive ? "Positive" : "Negative",
+            positive,
         },
         {
-            name: "EMA 50",
-            value: "2,365.80",
-            signal: "BUY",
-        },
-        {
-            name: "Bollinger",
-            value: "Upper",
-            signal: "NEUTRAL",
+            name: "Volume",
+            value: stock.volume.toLocaleString(),
+            positive: undefined,
         },
     ];
 
     return (
         <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
 
-            <div className="mb-5 flex items-center justify-between">
-
-                <h3 className="font-bold">
+            <div className="mb-5">
+                <h2 className="text-lg font-semibold">
                     Technical Signals
-                </h3>
+                </h2>
 
-                <span className="rounded-md bg-green-500/10 px-2 py-1 text-[10px] font-bold text-green-400">
-                    BULLISH
-                </span>
-
+                <p className="text-sm text-gray-400">
+                    {stock.symbol}
+                </p>
             </div>
 
             <div className="space-y-3">
 
-                {indicators.map((indicator) => (
+                {signals.map((signal) => (
                     <div
-                        key={indicator.name}
-                        className="flex items-center justify-between"
+                        key={signal.name}
+                        className="flex items-center justify-between rounded-xl bg-[#0b1120] px-4 py-3"
                     >
 
-                        <div>
-                            <p className="text-xs font-medium">
-                                {indicator.name}
-                            </p>
-
-                            <p className="mt-1 text-[10px] text-gray-600">
-                                {indicator.value}
-                            </p>
-                        </div>
+                        <span className="text-sm text-gray-400">
+                            {signal.name}
+                        </span>
 
                         <span
-                            className={`rounded-md px-2 py-1 text-[10px] font-bold ${
-                                indicator.signal === "BUY"
-                                    ? "bg-green-500/10 text-green-400"
-                                    : "bg-yellow-500/10 text-yellow-400"
+                            className={`text-sm font-semibold ${
+                                signal.positive === undefined
+                                    ? "text-white"
+                                    : signal.positive
+                                    ? "text-green-400"
+                                    : "text-red-400"
                             }`}
                         >
-                            {indicator.signal}
+                            {signal.value}
                         </span>
 
                     </div>
                 ))}
 
             </div>
+
+            <p className="mt-4 text-xs text-gray-500">
+                Advanced indicators such as RSI, MACD and moving averages
+                will be added later.
+            </p>
 
         </div>
     );

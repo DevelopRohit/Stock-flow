@@ -1,58 +1,102 @@
-export default function MarketOverview() {
-    const markets = [
-        {
-            name: "NIFTY 50",
-            value: "24,718.35",
-            change: "+0.84%",
-        },
-        {
-            name: "BANK NIFTY",
-            value: "54,820.20",
-            change: "+1.12%",
-        },
-        {
-            name: "SENSEX",
-            value: "81,120.40",
-            change: "+0.76%",
-        },
-        {
-            name: "NASDAQ",
-            value: "17,832.60",
-            change: "+0.43%",
-        },
-    ];
+export default function MarketOverview({ stock }) {
+    if (!stock) {
+        return null;
+    }
+
+    const positive = stock.change >= 0;
 
     return (
         <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
 
-            <h3 className="mb-5 font-bold">
-                Market Overview
-            </h3>
+            <div className="mb-5">
+                <h2 className="text-lg font-semibold">
+                    Market Overview
+                </h2>
 
-            <div className="space-y-3">
+                <p className="text-sm text-gray-400">
+                    Current market information
+                </p>
+            </div>
 
-                {markets.map((market) => (
-                    <div
-                        key={market.name}
-                        className="flex items-center justify-between rounded-xl bg-white/5 p-3"
-                    >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
-                        <div>
-                            <p className="text-xs text-gray-500">
-                                {market.name}
-                            </p>
+                {/* Selected Stock */}
+                <div className="rounded-xl bg-[#0b1120] p-4">
 
-                            <p className="mt-1 font-semibold">
-                                {market.value}
-                            </p>
-                        </div>
+                    <p className="text-xs text-gray-500">
+                        Selected Stock
+                    </p>
 
-                        <span className="text-xs font-semibold text-green-400">
-                            {market.change}
+                    <div className="mt-2 flex items-center justify-between">
+
+                        <span className="font-semibold">
+                            {stock.symbol}
+                        </span>
+
+                        <span className="text-sm">
+                            ₹{stock.price.toFixed(2)}
                         </span>
 
                     </div>
-                ))}
+
+                </div>
+
+                {/* Performance */}
+                <div className="rounded-xl bg-[#0b1120] p-4">
+
+                    <p className="text-xs text-gray-500">
+                        Daily Performance
+                    </p>
+
+                    <div
+                        className={`mt-2 text-xl font-bold ${
+                            positive
+                                ? "text-green-400"
+                                : "text-red-400"
+                        }`}
+                    >
+                        {positive ? "+" : ""}
+                        {stock.changePercent.toFixed(2)}%
+                    </div>
+
+                </div>
+
+                {/* Volume */}
+                <div className="rounded-xl bg-[#0b1120] p-4">
+
+                    <p className="text-xs text-gray-500">
+                        Trading Volume
+                    </p>
+
+                    <div className="mt-2 text-xl font-bold">
+                        {stock.volume.toLocaleString()}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div className="mt-5 border-t border-white/10 pt-5">
+
+                <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+
+                    <span>
+                        Open: ₹{stock.open.toFixed(2)}
+                    </span>
+
+                    <span>
+                        High: ₹{stock.high.toFixed(2)}
+                    </span>
+
+                    <span>
+                        Low: ₹{stock.low.toFixed(2)}
+                    </span>
+
+                    <span>
+                        Data: Alpha Vantage
+                    </span>
+
+                </div>
 
             </div>
 

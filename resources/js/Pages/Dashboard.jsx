@@ -1,5 +1,5 @@
 import { Head } from "@inertiajs/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Sidebar from "../Components/Dashboard/Sidebar";
 import Topbar from "../Components/Dashboard/Topbar";
@@ -13,23 +13,104 @@ import MarketOverview from "../Components/Dashboard/MarketOverview";
 import TechnicalSignals from "../Components/Dashboard/TechnicalSignals";
 
 export default function Dashboard() {
+    const [stock, setStock] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const [stock, setStock] = useState({
-        symbol: "RELIANCE",
-        name: "Reliance Industries",
-        price: 2456.75,
-        change: 32.45,
-        changePercent: 1.34,
-    });
+    const fetchStock = async (symbol = "RELIANCE.BSE") => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch(
+                `/stock/${encodeURIComponent(symbol)}`
+            );
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success) {
+                throw new Error(
+                    result.message || "Unable to fetch stock data."
+                );
+            }
+
+            const prices = Object.entries(result.data || {})
+                .map(([date, values]) => ({
+                    date,
+                    open: Number(values["1. open"]),
+                    high: Number(values["2. high"]),
+                    low: Number(values["3. low"]),
+                    close: Number(values["4. close"]),
+                    volume: Number(values["5. volume"]),
+                }))
+                .filter((item) => Number.isFinite(item.close))
+                .sort(
+                    (a, b) =>
+                        new Date(a.date) - new Date(b.date)
+                );
+
+            if (!prices.length) {
+                throw new Error(
+                    "No stock price data was returned by the API."
+                );
+            }
+
+            const latest = prices[prices.length - 1];
+            const previous = prices[prices.length - 2];
+
+            const change =
+                latest && previous
+                    ? latest.close - previous.close
+                    : 0;
+
+            const changePercent =
+                latest && previous && previous.close !== 0
+                    ? (change / previous.close) * 100
+                    : 0;
+
+            const cleanSymbol = result.symbol
+                .replace(".BSE", "")
+                .replace(".NSE", "");
+
+            setStock({
+                symbol: cleanSymbol,
+                apiSymbol: result.symbol,
+                name: `${cleanSymbol} Stock`,
+                price: latest?.close ?? 0,
+                change,
+                changePercent,
+                open: latest?.open ?? 0,
+                high: latest?.high ?? 0,
+                low: latest?.low ?? 0,
+                volume: latest?.volume ?? 0,
+                prices,
+            });
+        } catch (err) {
+            setStock(null);
+            setError(
+                err.message || "Something went wrong while loading stock data."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchStock();
+    }, []);
 
     const handleSearch = (symbol) => {
-        setStock({
-            symbol: symbol,
-            name: `${symbol} Stock`,
-            price: 2456.75,
-            change: 32.45,
-            changePercent: 1.34,
-        });
+        if (!symbol) {
+            return;
+        }
+
+        let apiSymbol = symbol.toUpperCase().trim();
+
+        if (!apiSymbol.includes(".")) {
+            apiSymbol = `${apiSymbol}.BSE`;
+        }
+
+        fetchStock(apiSymbol);
     };
 
     return (
@@ -38,53 +119,65 @@ export default function Dashboard() {
 
             <div className="min-h-screen bg-[#0b1120] text-white">
 
-                {/* Sidebar */}
                 <Sidebar />
 
-                {/* Main */}
                 <main className="lg:ml-64">
 
-                    {/* Topbar */}
                     <Topbar onSearch={handleSearch} />
 
                     <div className="p-5 lg:p-7">
 
-                        {/* Stock Header */}
-                        <StockHeader stock={stock} />
-
-                        {/* Main Trading Area */}
-                        <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
-
-                            {/* Chart */}
-                            <div className="xl:col-span-2">
-                                <TradingChart />
+                        {loading && (
+                            <div className="mb-5 rounded-xl border border-white/10 bg-white/5 p-5 text-gray-300">
+                                Loading stock data...
                             </div>
+                        )}
 
-                            {/* Order */}
-                            <OrderPanel stock={stock} />
+                        {error && (
+                            <div className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
+                                <div className="font-semibold">
+                                    Unable to load stock
+                                </div>
 
-                        </div>
+                                <div className="mt-1 text-sm">
+                                    {error}
+                                </div>
+                            </div>
+                        )}
 
-                        {/* Position */}
-                        <div className="mt-5">
-                            <PositionCard stock={stock} />
-                        </div>
+                        {stock && !loading && (
+                            <>
+                                <StockHeader stock={stock} />
 
-                        {/* Lower Dashboard */}
-                        <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
+                                <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
 
-                            <MarketDepth />
+                                    <div className="xl:col-span-2">
+                                        <TradingChart stock={stock} />
+                                    </div>
 
-                            <Watchlist />
+                                    <OrderPanel stock={stock} />
 
-                            <TechnicalSignals />
+                                </div>
 
-                        </div>
+                                <div className="mt-5">
+                                    <PositionCard stock={stock} />
+                                </div>
 
-                        {/* Market Overview */}
-                        <div className="mt-5">
-                            <MarketOverview />
-                        </div>
+                                <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
+
+                                    <MarketDepth stock={stock} />
+
+                                    <Watchlist stock={stock} />
+
+                                    <TechnicalSignals stock={stock} />
+
+                                </div>
+
+                                <div className="mt-5">
+                                    <MarketOverview stock={stock} />
+                                </div>
+                            </>
+                        )}
 
                     </div>
 

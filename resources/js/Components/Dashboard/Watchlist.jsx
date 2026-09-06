@@ -1,91 +1,72 @@
-export default function Watchlist() {
-    const stocks = [
-        {
-            symbol: "RELIANCE",
-            price: "2,456.75",
-            change: "+1.34%",
-        },
-        {
-            symbol: "TCS",
-            price: "3,982.40",
-            change: "+0.82%",
-        },
-        {
-            symbol: "INFY",
-            price: "1,845.20",
-            change: "-0.42%",
-        },
-        {
-            symbol: "HDFCBANK",
-            price: "1,725.60",
-            change: "+1.12%",
-        },
-        {
-            symbol: "ICICIBANK",
-            price: "1,348.30",
-            change: "+0.67%",
-        },
-    ];
+export default function Watchlist({ stock }) {
+    if (!stock) {
+        return null;
+    }
+
+    const positive = stock.change >= 0;
 
     return (
         <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
 
             <div className="mb-5 flex items-center justify-between">
+                <div>
+                    <h2 className="text-lg font-semibold">
+                        Watchlist
+                    </h2>
 
-                <h3 className="font-bold">
-                    Watchlist
-                </h3>
+                    <p className="text-sm text-gray-400">
+                        Selected stock
+                    </p>
+                </div>
 
-                <button className="text-lg text-gray-500 hover:text-white">
-                    +
+                <button
+                    type="button"
+                    className="rounded-lg bg-white/5 px-3 py-2 text-xs text-gray-400 hover:text-white"
+                >
+                    + Add
                 </button>
-
             </div>
 
-            <div className="space-y-1">
+            <div className="rounded-xl border border-white/5 bg-[#0b1120] p-4">
 
-                {stocks.map((stock) => {
-                    const positive = stock.change.startsWith("+");
+                <div className="flex items-center justify-between">
 
-                    return (
-                        <div
-                            key={stock.symbol}
-                            className="flex items-center justify-between rounded-xl px-3 py-3 transition hover:bg-white/5"
-                        >
-
-                            <div>
-                                <p className="text-sm font-semibold">
-                                    {stock.symbol}
-                                </p>
-
-                                <p className="text-[10px] text-gray-600">
-                                    NSE
-                                </p>
-                            </div>
-
-                            <div className="text-right">
-
-                                <p className="text-sm font-semibold">
-                                    ₹{stock.price}
-                                </p>
-
-                                <p
-                                    className={`text-xs ${
-                                        positive
-                                            ? "text-green-400"
-                                            : "text-red-400"
-                                    }`}
-                                >
-                                    {stock.change}
-                                </p>
-
-                            </div>
-
+                    <div>
+                        <div className="font-semibold">
+                            {stock.symbol}
                         </div>
-                    );
-                })}
+
+                        <div className="mt-1 text-xs text-gray-500">
+                            {stock.name}
+                        </div>
+                    </div>
+
+                    <div className="text-right">
+
+                        <div className="font-semibold">
+                            ₹{stock.price.toFixed(2)}
+                        </div>
+
+                        <div
+                            className={`text-xs ${
+                                positive
+                                    ? "text-green-400"
+                                    : "text-red-400"
+                            }`}
+                        >
+                            {positive ? "+" : ""}
+                            {stock.changePercent.toFixed(2)}%
+                        </div>
+
+                    </div>
+
+                </div>
 
             </div>
+
+            <p className="mt-4 text-xs text-gray-500">
+                Watchlist database functionality will be added later.
+            </p>
 
         </div>
     );

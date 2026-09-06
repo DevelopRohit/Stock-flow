@@ -1,76 +1,50 @@
-export default function PositionCard() {
+export default function PositionCard({ stock }) {
+    if (!stock) {
+        return null;
+    }
+
     return (
         <div className="rounded-2xl border border-white/10 bg-[#111827] p-5">
 
-            <div className="mb-5 flex items-center justify-between">
-
+            <div className="mb-4 flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-bold">
+                    <h2 className="text-lg font-semibold">
                         Current Position
-                    </h3>
+                    </h2>
 
-                    <p className="mt-1 text-xs text-gray-500">
-                        RELIANCE • NSE
+                    <p className="text-sm text-gray-400">
+                        {stock.symbol}
                     </p>
                 </div>
 
-                <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-bold text-green-400">
-                    PROFIT
+                <span className="rounded-lg bg-white/5 px-3 py-1 text-xs text-gray-400">
+                    Demo
                 </span>
-
             </div>
 
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+
+                <Stat
+                    label="Current Price"
+                    value={`₹${stock.price.toFixed(2)}`}
+                />
+
+                <Stat
+                    label="Day Change"
+                    value={`${stock.change >= 0 ? "+" : ""}${stock.change.toFixed(2)}`}
+                    positive={stock.change >= 0}
+                />
+
+                <Stat
+                    label="Change %"
+                    value={`${stock.changePercent >= 0 ? "+" : ""}${stock.changePercent.toFixed(2)}%`}
+                    positive={stock.changePercent >= 0}
+                />
 
                 <Stat
                     label="Quantity"
-                    value="120"
+                    value="0"
                 />
-
-                <Stat
-                    label="Avg. Price"
-                    value="₹2,280.50"
-                />
-
-                <Stat
-                    label="Invested"
-                    value="₹2,73,660"
-                />
-
-                <Stat
-                    label="Current Value"
-                    value="₹2,94,810"
-                />
-
-            </div>
-
-            <div className="mt-4 rounded-xl bg-green-500/5 p-4">
-
-                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-
-                    <div>
-                        <p className="text-xs text-gray-500">
-                            Unrealized P&L
-                        </p>
-
-                        <p className="mt-1 text-2xl font-bold text-green-400">
-                            +₹21,150
-                        </p>
-                    </div>
-
-                    <div className="text-left sm:text-right">
-
-                        <p className="text-xs text-gray-500">
-                            Return
-                        </p>
-
-                        <p className="mt-1 font-bold text-green-400">
-                            +7.72%
-                        </p>
-
-                    </div>
-
-                </div>
 
             </div>
 
@@ -78,18 +52,24 @@ export default function PositionCard() {
     );
 }
 
-function Stat({ label, value }) {
+function Stat({ label, value, positive }) {
     return (
-        <div className="rounded-xl bg-white/5 p-4">
-
+        <div>
             <p className="text-xs text-gray-500">
                 {label}
             </p>
 
-            <p className="mt-2 font-semibold text-white">
+            <p
+                className={`mt-1 text-sm font-semibold ${
+                    positive === undefined
+                        ? "text-white"
+                        : positive
+                        ? "text-green-400"
+                        : "text-red-400"
+                }`}
+            >
                 {value}
             </p>
-
         </div>
     );
 }
