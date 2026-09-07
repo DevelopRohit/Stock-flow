@@ -1,11 +1,39 @@
+import { Link, usePage } from "@inertiajs/react";
+
 export default function Sidebar() {
+    const { url } = usePage();
+
     const menu = [
-        { icon: "◉", label: "Overview" },
-        { icon: "◫", label: "Markets" },
-        { icon: "★", label: "Watchlist" },
-        { icon: "◈", label: "Portfolio" },
-        { icon: "⇅", label: "Orders" },
-        { icon: "◷", label: "History" },
+        {
+            icon: "◉",
+            label: "Overview",
+            href: "/dashboard",
+        },
+        {
+            icon: "◫",
+            label: "Markets",
+            href: "/markets",
+        },
+        {
+            icon: "★",
+            label: "Watchlist",
+            href: "/watchlist",
+        },
+        {
+            icon: "◈",
+            label: "Portfolio",
+            href: "/portfolio",
+        },
+        {
+            icon: "⇅",
+            label: "Orders",
+            href: "/orders",
+        },
+        {
+            icon: "◷",
+            label: "History",
+            href: "/history",
+        },
     ];
 
     return (
@@ -36,31 +64,48 @@ export default function Sidebar() {
                         Trading
                     </p>
 
-                    {menu.map((item, index) => (
-                        <button
-                            key={item.label}
-                            className={`mb-1 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${
-                                index === 0
-                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                                    : "text-gray-400 hover:bg-white/5 hover:text-white"
-                            }`}
-                        >
-                            <span className="w-5 text-center">
-                                {item.icon}
-                            </span>
+                    {menu.map((item) => {
+                        const isActive =
+                            url === item.href ||
+                            url.startsWith(item.href + "/");
 
-                            {item.label}
-                        </button>
-                    ))}
+                        return (
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className={`mb-1 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${
+                                    isActive
+                                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                                        : "text-gray-400 hover:bg-white/5 hover:text-white"
+                                }`}
+                            >
+                                <span className="w-5 text-center">
+                                    {item.icon}
+                                </span>
+
+                                {item.label}
+                            </Link>
+                        );
+                    })}
 
                     <p className="mb-3 mt-8 px-3 text-xs uppercase tracking-wider text-gray-600">
                         System
                     </p>
 
-                    <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-gray-400 transition hover:bg-white/5 hover:text-white">
-                        <span className="w-5 text-center">⚙</span>
+                    <Link
+                        href="/settings"
+                        className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition ${
+                            url === "/settings"
+                                ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                                : "text-gray-400 hover:bg-white/5 hover:text-white"
+                        }`}
+                    >
+                        <span className="w-5 text-center">
+                            ⚙
+                        </span>
+
                         Settings
-                    </button>
+                    </Link>
 
                 </nav>
 
