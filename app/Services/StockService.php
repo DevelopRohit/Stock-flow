@@ -203,6 +203,286 @@ class StockService
         ];
     }
 
+    
+    /**
+     * Get today's intraday stock data.
+     */
+/**
+ * Get today's intraday stock data.
+ */
+public function getIntradayData(string $symbol): array
+{
+    $symbol = strtoupper(trim($symbol));
+
+    if ($symbol === '') {
+        return [
+            'success' => false,
+            'message' => 'Stock symbol is required.',
+        ];
+    }
+
+    $yahooSymbol = $this->convertToYahooSymbol($symbol);
+
+    /*
+     * Cache the last successful intraday response.
+     *
+     * This prevents unnecessary Yahoo requests and
+     * keeps the dashboard working if Yahoo temporarily fails.
+     */
+    $cacheKey = 'stock_intraday_' . $symbol;
+
+    try {
+
+        /*
+         * Yahoo intraday data for the current/previous
+         * trading session.
+         */
+        $period2 = time();
+
+        $period1 = strtotime('-1 day');
+
+        $response = Http::retry(
+            3,
+            1500,
+            throw: false
+        )
+            ->timeout(20)
+            ->withHeaders([
+                'User-Agent' =>
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+
+                'Accept' => 'application/json',
+
+                'Accept-Language' =>
+                    'en-US,en;q=0.9',
+            ])
+            ->get(
+                $this->chartUrl .
+                    '/' .
+                    rawurlencode($yahooSymbol),
+                [
+                    'period1' => $period1,
+                    'period2' => $period2,
+
+                    /*
+                     * 5-minute intraday candles.
+                     */
+                    'interval' => '5m',
+
+                    'events' => 'history',
+
+                    'includePrePost' => 'false',
+                ]
+            );
+
+        /*
+         * Yahoo HTTP failure.
+         */
+        if ($response->failed()) {
+
+            /*
+             * Return cached data if available.
+             */
+            $cached = Cache::get($cacheKey);
+
+            if ($cached) {
+                $cached['fromCache'] = true;
+
+                return $cached;
+            }
+
+            return [
+                'success' => false,
+                'message' =>
+                    'Yahoo Finance intraday request failed.',
+            ];
+        }
+
+        $data = $response->json();
+
+        /*
+         * Yahoo API error.
+         */
+        if (
+            isset($data['chart']['error']) &&
+            $data['chart']['error'] !== null
+        ) {
+
+            $cached = Cache::get($cacheKey);
+
+            if ($cached) {
+                $cached['fromCache'] = true;
+
+                return $cached;
+            }
+
+            return [
+                'success' => false,
+                'message' =>
+                    'Yahoo Finance intraday data is unavailable.',
+            ];
+        }
+
+        /*
+         * Get Yahoo result.
+         */
+        $result =
+            $data['chart']['result'][0] ?? null;
+
+        if (!$result) {
+
+            $cached = Cache::get($cacheKey);
+
+            if ($cached) {
+                $cached['fromCache'] = true;
+
+                return $cached;
+            }
+
+            return [
+                'success' => false,
+                'message' =>
+                    'No intraday stock data was returned.',
+            ];
+        }
+
+        $timestamps =
+            $result['timestamp'] ?? [];
+
+        $quote =
+            $result['indicators']['quote'][0] ?? [];
+
+        $opens =
+            $quote['open'] ?? [];
+
+        $highs =
+            $quote['high'] ?? [];
+
+        $lows =
+            $quote['low'] ?? [];
+
+        $closes =
+            $quote['close'] ?? [];
+
+        $volumes =
+            $quote['volume'] ?? [];
+
+        $priceData = [];
+
+        foreach (
+            $timestamps
+            as $index => $timestamp
+        ) {
+
+            $close =
+                $closes[$index] ?? null;
+
+            /*
+             * Skip missing candles.
+             */
+            if ($close === null) {
+                continue;
+            }
+
+            $priceData[] = [
+                'timestamp' => $timestamp,
+
+                'date' =>
+                    date(
+                        'Y-m-d H:i:s',
+                        $timestamp
+                    ),
+
+                'open' =>
+                    $opens[$index] ?? null,
+
+                'high' =>
+                    $highs[$index] ?? null,
+
+                'low' =>
+                    $lows[$index] ?? null,
+
+                'close' =>
+                    $close,
+
+                'volume' =>
+                    $volumes[$index] ?? 0,
+            ];
+        }
+
+        /*
+         * No valid data.
+         */
+        if (empty($priceData)) {
+
+            $cached = Cache::get($cacheKey);
+
+            if ($cached) {
+                $cached['fromCache'] = true;
+
+                return $cached;
+            }
+
+            return [
+                'success' => false,
+                'message' =>
+                    'No intraday price data was found.',
+            ];
+        }
+
+        /*
+         * Successful response.
+         */
+        $result = [
+            'success' => true,
+
+            'symbol' =>
+                $symbol,
+
+            'yahooSymbol' =>
+                $yahooSymbol,
+
+            'fromCache' =>
+                false,
+
+            'data' =>
+                $priceData,
+        ];
+
+        /*
+         * Keep successful intraday data for 5 minutes.
+         *
+         * This means temporary Yahoo failures will not
+         * break the chart.
+         */
+        Cache::put(
+            $cacheKey,
+            $result,
+            now()->addMinutes(5)
+        );
+
+        return $result;
+
+    } catch (\Throwable $e) {
+
+        /*
+         * Last successful cached data.
+         */
+        $cached = Cache::get($cacheKey);
+
+        if ($cached) {
+            $cached['fromCache'] = true;
+
+            return $cached;
+        }
+
+        return [
+            'success' => false,
+            'message' =>
+                'Unable to connect to Yahoo Finance.',
+        ];
+    }
+}
     /**
      * Fetch stock data from Yahoo Finance.
      */

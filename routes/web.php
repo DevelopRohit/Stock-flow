@@ -13,3 +13,4 @@ Route::get('/', function () {
 Route::get('/stock/{symbol}', [StockController::class, 'show']);
 Route::get('/stock-view/{symbol}', [StockController::class, 'showPage']);
 Route::get('/stock-search', [StockController::class, 'search']);
+Route::get('/stock/{symbol}/intraday', [StockController::class, 'intraday']);
